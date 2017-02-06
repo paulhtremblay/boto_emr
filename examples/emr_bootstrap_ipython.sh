@@ -1,3 +1,3 @@
 #!/bin/bash
 set -e
-sudo pip install ipython
+sudo pip3 install ipython

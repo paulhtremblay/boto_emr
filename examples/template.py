@@ -1,9 +1,4 @@
-﻿
-"""
-For testing
-
-"""
-import datetime
+﻿import datetime
 import boto3
 session = boto3.Session(profile_name='admin')
 client = session.client('emr')
