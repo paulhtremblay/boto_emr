@@ -1,0 +1,6 @@
+include *.py
+include MANIFEST
+include MANIFEST.in
+include tests
+recursive-include boto_emr *
+recursive-include examples *
