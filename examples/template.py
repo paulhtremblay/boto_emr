@@ -20,7 +20,8 @@ def make_instances():
            'Configurations': [
                {"Classification":"emrfs-site",
                "Properties":{"fs.s3.consistent.retryPeriodSeconds":"10",
-                   "fs.s3.consistent":"true",
+                   "consistent":"true",
+                   "Consistent":"true",
                    "fs.s3.consistent.retryCount":"5",
                    "fs.s3.consistent.metadata.tableName":"EmrFSMetadata"},
                "Configurations":[]
@@ -31,24 +32,24 @@ def make_instances():
            'InstanceRole': 'CORE',
            'Market': 'SPOT',
            'BidPrice': '.6',
-           'InstanceType': 'm1.medium',
-           'InstanceCount': 1,
+           'InstanceType': 'm3.xlarge',
+           'InstanceCount': 15,
            'Configurations': [
                {"Classification":"emrfs-site",
                "Properties":{"fs.s3.consistent.retryPeriodSeconds":"10",
-                   "fs.s3.consistent":"true",
+                   "consistent":"true",
+                   "Consistent":"true",
                    "fs.s3.consistent.retryCount":"5",
                    "fs.s3.consistent.metadata.tableName":"EmrFSMetadata"},
                "Configurations":[]
                },
                ],
 
-
-
        }
            ],
        'Ec2KeyName': 'ubuntu-home',
        'KeepJobFlowAliveWhenNoSteps': True,
+       'Ec2SubnetId': "subnet-0f159079",
    }
 
 def make_bootstrap():
