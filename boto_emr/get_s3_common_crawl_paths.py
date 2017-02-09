@@ -4,7 +4,7 @@ import os
 
 def list_objects(bucket_name, prefix):
     final = []
-    session = boto3.Session(profile_name = 'admin')
+    session = boto3.Session()
     client = session.client('s3')
     next_token = 'init'
     kwargs = {}

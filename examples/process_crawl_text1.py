@@ -3,6 +3,8 @@ import io
 import gzip
 from pyspark.sql import Row
 import boto_emr.parse_marc as parse_marc
+import boto_emr.get_s3_common_crawl_paths as crawl_paths
+
 from pyspark import SparkContext
 
 def process_file(s):
@@ -16,7 +18,7 @@ def get_read_bucket(test = False):
 def get_in_files(test = False):
     if test:
         return ['test/warc_crawl1.txt.gz', 'test/warc_crawl2.txt.gz', 'test/warc_crawl3.txt.gz']
-    return ['crawl-data/CC-MAIN-2016-50/segments/1480698542588.29/crawldiagnostics/CC-MAIN-20161202170902-00507-ip-10-31-129-80.ec2.internal.warc.gz']
+    return crawl_paths.get_crawl_paths()
 
 def get_contents(key, bucket_name, encoding= "utf8"):
     session = boto3.Session()
