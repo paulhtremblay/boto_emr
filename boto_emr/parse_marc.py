@@ -1,11 +1,14 @@
 ﻿import io
 import datetime
 
-def _get_record_start():
-    return 'WARC/1.0'
+def _is_new_record(line):
+    return line.strip() == b'WARC/1.0' or line.strip() == 'WARC/1.0'
 
 def _get_key_value(line):
-    f = line.split(':', 1)
+    if isinstance(line, bytes):
+        f = line.split(b':', 1)
+    else:
+        f = line.split(':', 1)
     if len(f) == 2:
         return f[0].strip(), f[1].strip()
     return None, None
@@ -24,18 +27,22 @@ def _process_value(key, value):
     return fun_dict.get(key, make_string)(value)
 
 def _process_line(line, record, list_of_marc_records):
-    if line.strip() == _get_record_start():
+    if _is_new_record(line):
         list_of_marc_records.append(record)
         record = {}
     key, value =  _get_key_value(line)
     if key:
-        record[key] = _process_value(key, value)
+        #record[key] = _process_value(key, value)
+        record[key] = value
 
 def parse(text):
     list_of_marc_records = []
     record = {}
-    f = io.StringIO(text)
-    line = True
+    if isinstance(text, bytes):
+        f = io.BytesIO(text)
+    else:
+        f = io.StringIO(text)
+    line = 'init'
     while line:
         line = f.readline()
         _process_line(line, record, list_of_marc_records)

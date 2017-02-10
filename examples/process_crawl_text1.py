@@ -18,7 +18,7 @@ def get_read_bucket(test = False):
 def get_in_files(test = False):
     if test:
         return ['test/warc_crawl1.txt.gz', 'test/warc_crawl2.txt.gz', 'test/warc_crawl3.txt.gz']
-    return crawl_paths.get_crawl_paths()
+    return crawl_paths.get_crawl_paths(the_type = 'crawldiagnostics')
 
 def get_contents(key, bucket_name, encoding= "utf8"):
     session = boto3.Session()
@@ -30,7 +30,7 @@ def my_gunzip(b):
     return gzip.GzipFile(fileobj = fileobj).read().decode()
 
 test = True
-sc  = SparkContext(appName = "test crawl 1")
+#sc  = SparkContext(appName = "test crawl 1")
 rdd = sc.parallelize(get_in_files(test = test))\
         .map(lambda x, bucket_name = get_read_bucket(test = test): get_contents(bucket_name = bucket_name, key = x))\
         .map(my_gunzip)\

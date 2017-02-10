@@ -61,7 +61,13 @@ WARC-Block-Digest: sha1:3J7HHBMWTSC7W53DDB7BHTUVPM26QS4B
 
     def test_parse(self):
         x = parse_marc.parse(self.test_txt1)
-        pp.pprint(x)
+        self.assertTrue(len(x) == 3)
+        self.assertTrue(len(list(x[0].keys())) == 25)
+
+    def test_parse_with_bytes(self):
+        x = parse_marc.parse(bytes(self.test_txt1, 'utf-8'))
+        self.assertTrue(len(x) == 3)
+        self.assertTrue(len(list(x[0].keys())) == 25)
 
 if __name__ == '__main__':
     unittest.main()
