@@ -2,13 +2,10 @@
 import datetime
 
 def _is_new_record(line):
-    return line.strip() == b'WARC/1.0' or line.strip() == 'WARC/1.0'
+    return  line.strip() == 'WARC/1.0'
 
 def _get_key_value(line):
-    if isinstance(line, bytes):
-        f = line.split(b':', 1)
-    else:
-        f = line.split(':', 1)
+    f = line.split(':', 1)
     if len(f) == 2:
         return f[0].strip(), f[1].strip()
     return None, None
@@ -32,16 +29,12 @@ def _process_line(line, record, list_of_marc_records):
         record = {}
     key, value =  _get_key_value(line)
     if key:
-        #record[key] = _process_value(key, value)
-        record[key] = value
+        record[key] = _process_value(key, value)
 
 def parse(text):
     list_of_marc_records = []
     record = {}
-    if isinstance(text, bytes):
-        f = io.BytesIO(text)
-    else:
-        f = io.StringIO(text)
+    f = io.StringIO(text)
     line = 'init'
     while line:
         line = f.readline()

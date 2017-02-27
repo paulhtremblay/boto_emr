@@ -1,7 +1,6 @@
 ﻿import boto3
 import os
 
-
 def list_objects(bucket_name, prefix):
     final = []
     session = boto3.Session()
@@ -27,3 +26,7 @@ def get_crawl_paths(the_type, recursion_limit = None):
     return list(filter(lambda x: os.path.split(os.path.split(x)[0])[1] == the_type,
             get_segments()))
 
+
+if __name__ == '__main__':
+    l = get_crawl_paths(the_type = 'crawldiagnostics')
+    print(len(l))
