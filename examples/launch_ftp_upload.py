@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import boto3
 session = boto3.Session(profile_name='admin')
 client = session.client('emr')
@@ -65,6 +65,12 @@ def make_bootstrap():
                 'Name': 'python-hdfs',
                 'ScriptBootstrapAction': {
                     'Path': 's3://paulhtremblay/emr_bootstrap_python_hdfs.sh',
+                }
+            },
+            {
+                'Name': 'python-hdfs',
+                'ScriptBootstrapAction': {
+                    'Path': 's3://paulhtremblay/emr_bootstrap_python.sh',
                 }
             },
         ]

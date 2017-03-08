@@ -7,6 +7,7 @@ import argparse
 import io
 import subprocess
 import shutil
+import datetime
 
 import pyspark
 from pyspark import  SparkContext
@@ -32,6 +33,13 @@ def get_contents_for_year(year, max_num = None):
             final.append(b_buffer.read())
     return final
 
+def make_root_dir_hdfs(root_dir):
+    subprocess.call(["hadoop", "fs", '-mkdir', '-p',  root_dir])
+
+def make_dirs_hdfs(year, root_dir):
+    assert isinstance(year, int), "year must be int"
+    new_dir = os.path.join(root_dir, str(year))
+    subprocess.call(["hadoop", "fs", '-mkdir', '-p',  new_dir])
 
 def make_dirs(year, root_dir):
     assert isinstance(year, int), "year must be int"
@@ -43,10 +51,9 @@ def move_to_hadoop(year, root_dir, local = False):
     from_dir = os.path.join(root_dir, str(year))
     if local:
         to_dir = os.path.join(root_dir, "{0}_".format(year))
-        subprocess.run(["cp", "-R", from_dir, to_dir])
+        subprocess.call(["cp", "-R", from_dir, to_dir])
     else:
-        subprocess.run(["hadoop", "fs", '-moveFromLocal', from_dir, from_dir])
-    shutil.rmtree(from_dir)
+        subprocess.call(["hadoop", "fs", '-moveFromLocal', from_dir, root_dir])
 
 def write_ftp_to_local(year, root_dir, max_num = None, local = False):
     assert isinstance(year, int), "year must be int"
@@ -66,6 +73,7 @@ def write_ftp_to_local(year, root_dir, max_num = None, local = False):
 def _get_sc(test = False):
     if test:
         return SparkContext( 'local', 'pyspark')
+    return SparkContext(appName = "ftp upload noaa data {0}".format(datetime.datetime.now()))
 
 def _get_args():
     parser = argparse.ArgumentParser(description='upload ftp files to S3')
@@ -75,18 +83,20 @@ def _get_args():
                 help = 'running on a machine without Hadoop')
     parser.add_argument('--root_dir', nargs = 1,
                 help = 'root dir ',
-                default = "/mnt/years")
+                default = ["/mnt/years"])
     args =  parser.parse_args()
     return args
 
 def main():
     args  = _get_args()
     sc = _get_sc(args.test)
+    make_root_dir_hdfs(args.root_dir[0])
     if args.test:
         rdd =   sc.parallelize([2016])
     else:
         rdd =   sc.parallelize(range(1901, 2018))
     rdd.foreach(lambda x, root_dir = args.root_dir[0]: make_dirs(x, root_dir))
+    #rdd.foreach(lambda x, root_dir = args.root_dir[0]: make_dirs_hdfs(x, root_dir))
     if args.test:
         rdd.foreach(lambda x, root_dir = args.root_dir[0], max_num = 3, local =
                 args.local:
