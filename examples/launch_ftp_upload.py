@@ -27,8 +27,8 @@ def make_instances():
            'InstanceRole': 'CORE',
            'Market': 'SPOT',
            'BidPrice': '.6',
-           'InstanceType': 'm3.xlarge',
-           'InstanceCount': 15,
+           'InstanceType': 'm1.medium',
+           'InstanceCount': 1,
            'Configurations': [
                {"Classification":"emrfs-site",
                "Properties":{"fs.s3.consistent.retryPeriodSeconds":"10",
@@ -61,12 +61,18 @@ def make_bootstrap():
                     'Path': 's3://paulhtremblay/emr_bootstrap_ipython.sh',
                 }
             },
+            {
+                'Name': 'python-hdfs',
+                'ScriptBootstrapAction': {
+                    'Path': 's3://paulhtremblay/emr_bootstrap_python_hdfs.sh',
+                }
+            },
         ]
 
 
 
 response = client.run_job_flow(
-   Name = "tutorial example {0}".format(datetime.datetime.now()),
+   Name = "ftp upload example {0}".format(datetime.datetime.now()),
    LogUri =  "s3n://paulhtremblay/emr-logs/",
    ReleaseLabel = 'emr-5.3.0',
    Instances = make_instances(),
