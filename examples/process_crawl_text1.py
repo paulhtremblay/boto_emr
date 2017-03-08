@@ -1,4 +1,4 @@
-﻿from pyspark.sql import Row
+from pyspark.sql import Row
 #import boto_emr.parse_marc as parse_marc
 from pyspark import SparkContext
 import datetime
@@ -23,7 +23,7 @@ def process_by_fields(l):
                 warc_type = fields[1].strip()
         else:
             text = line
-    return Row(host =host, date = date, text = text, 
+    return Row(host =host, date = date, text = text,
             ip_address = ip_address, warc_type = warc_type)
 
 
