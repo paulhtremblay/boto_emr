@@ -1,4 +1,4 @@
-﻿import datetime
+import datetime
 import boto3
 session = boto3.Session(profile_name='admin')
 client = session.client('emr')
@@ -73,6 +73,7 @@ response = client.run_job_flow(
    JobFlowRole = 'EMR_EC2_DefaultRole',
    ServiceRole = 'EMR_DefaultRole',
    BootstrapActions= make_bootstrap(),
+   Steps=[{'HadoopJarStep': {'Args': ['spark-submit', '/usr/local/bin/upload_noaa1_to_s3.py', '--test' ], 'Jar': 'command-runner.jar'},
    Applications =  [
         {
             "Name": "Hadoop",
