@@ -50,13 +50,11 @@ def make_bootstrap():
 
 
 
-def create_response(start_year, end_year, local =False, test = False, write_dir = None, md5_sum = True):
+def create_response(chunk_num, test = False):
     args = ['python34', '/usr/local/bin/upload_noaa1_to_s3.py']
-    args.extend(['--start-year', str(start_year), '--end-year', str(end_year)])
+    args.extend(['--chunk-num', str(chunk_num)])
     if test:
         args.append('--test')
-    if md5_sum:
-        args.append('--md5-sum')
     response = client.run_job_flow(
        Name = "ftp upload example {0}".format(datetime.datetime.now()),
        LogUri =  "s3n://paulhtremblay/emr-logs/",
@@ -118,30 +116,18 @@ def _get_args():
     parser = argparse.ArgumentParser(description='upload ftp files to S3')
     parser.add_argument('--test', action = 'store_true',
                 help = 'test run on smaller data')
-    parser.add_argument('--local', action = 'store_true',
-                help = 'running on a machine without Hadoop')
     parser.add_argument('--validation', action = 'store_true',
                 help = 'a validation run')
-    parser.add_argument('--write-dir',
-                help = 'directory to write to  dir (temporarily) ',
-                default = "/mnt/years")
     parser.add_argument('--s3_dir', type = str,
             help ="s3 directory in the root directory", default = "noaa")
-    parser.add_argument('--md5-sum', action = 'store_true',
-                help = 'whether to write md5sum')
+    parser.add_argument('--chunk-num', type = int, required=True,
+            help ="chunk number to work on")
     args =  parser.parse_args()
     return args
 
 def main():
     args = _get_args()
-    years = [
-            [1955,  1958],
-            ]
-    for year in years:
-        response = create_response(start_year = year[0], end_year = year[1],
-            local = args.local, test = args.test, write_dir = args.write_dir,
-            md5_sum = True)
-        print(response)
+    print(create_response(chunk_num = args.chunk_num))
 
 if __name__ == '__main__':
     main()

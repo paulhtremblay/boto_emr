@@ -51,5 +51,4 @@ def make_chunks(chunk_size):
                 size = 0
                 temp = []
             temp.append(info)
-        yield temp
 
