@@ -50,11 +50,13 @@ def make_bootstrap():
 
 
 
-def create_response(chunk_num, test = False):
+def create_response(chunk_num, test = False, validation = False):
     args = ['python34', '/usr/local/bin/upload_noaa1_to_s3.py']
     args.extend(['--chunk-num', str(chunk_num)])
     if test:
         args.append('--test')
+    if validation:
+        args.append('--validation')
     response = client.run_job_flow(
        Name = "ftp upload example {0}".format(datetime.datetime.now()),
        LogUri =  "s3n://paulhtremblay/emr-logs/",
@@ -127,7 +129,7 @@ def _get_args():
 
 def main():
     args = _get_args()
-    print(create_response(chunk_num = args.chunk_num))
+    print(create_response(chunk_num = args.chunk_num, test = args.test, validation = args.validation))
 
 if __name__ == '__main__':
     main()

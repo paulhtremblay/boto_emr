@@ -43,9 +43,6 @@ def write_ftp_to_local(json_objects,  s3_dir, mdsums,  validation = False):
             mdsums.append((str(json_obj["year"]), json_obj["name"], md5(local_gz )))
             s3_out_dir = '{0}/{1}/{2}'.format(s3_dir, json_obj["year"],
                     json_obj["name"])
-            if validation:
-                s3_out_dir = '{0}_validation/{1}/{2}'.format(s3_dir,
-                json_obj["year"], json_obj["name"])
             s3_client.upload_file(local_gz, 'paulhtremblay', s3_out_dir )
             os.close(fh)
             os.remove(local_gz)
@@ -80,7 +77,8 @@ def main():
     if args.validation:
         s3_dir += '_validation'
     mdsums = []
-    write_ftp_to_local(json_objects = chunk,  s3_dir = s3_dir, mdsums = mdsums)
+    write_ftp_to_local(json_objects = chunk,  s3_dir = s3_dir, mdsums = mdsums,
+            validation = args.validation)
     s3_mdsum_path =\
             "md5_noaa_{0}_{1}.csv"\
             .format(datetime.datetime.now()\
