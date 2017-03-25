@@ -40,7 +40,7 @@ def make_chunks(chunk_size):
     final = []
     temp  = []
     size = 0
-    for year in range(1901, 2017):
+    for year in range(1901, 2018):
         g = get_paths(year)
         size_of_chunk = 0
         for info in g:
