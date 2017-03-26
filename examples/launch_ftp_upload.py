@@ -137,6 +137,8 @@ def _get_args():
 
 def main():
     args = _get_args()
+    print(create_response(chunk_num = 95, test = False, validation = True))
+    return
     start = 0
     max_num_emr_clusters = 18
     end = start + max_num_emr_clusters + 1
