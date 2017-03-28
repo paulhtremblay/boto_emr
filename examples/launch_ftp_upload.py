@@ -39,13 +39,13 @@ def make_bootstrap():
             {
                 'Name': 'Generic bootstrap',
                 'ScriptBootstrapAction': {
-                    'Path': 's3://paulhtremblay/emr_bootstrap.sh',
+                    'Path': 's3://paulhtremblay/emr_bootstraps/emr_bootstrap.sh',
                 }
             },
             {
                 'Name': 'python-hdfs',
                 'ScriptBootstrapAction': {
-                    'Path': 's3://paulhtremblay/emr_bootstrap_python.sh',
+                    'Path': 's3://paulhtremblay/emr_bootstraps/emr_bootstrap_python.sh',
                 }
             },
         ]
