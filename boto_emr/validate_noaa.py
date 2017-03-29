@@ -32,14 +32,18 @@ def get_md5sum(my_iter):
         final.append(Row(md5sum = md5_sum, path = line[0], key = os.path.split(line[0])[1]))
     return iter(final)
 
-def make_rdd(sc, start_year, end_year, validation = ''):
+def make_rdd(sc, start_year, end_year, validation = False):
     for counter, year in enumerate(range(start_year, end_year + 1)):
-        rdd_temp = sc.wholeTextFiles("s3://paulhtremblay/noaa{0}/{1}/".format(validation, year))\
-            .mapPartitions(get_md5sum)
+        if validation:
+            rdd_temp = sc.wholeTextFiles("s3://paulhtremblay/noaa/tmp/data_validation/{0}/".format(year))\
+                .mapPartitions(get_md5sum)
+        else:
+            rdd_temp = sc.wholeTextFiles("s3://paulhtremblay/noaa/data/{0}/".format( year))\
+                .mapPartitions(get_md5sum)
         if counter == 0:
             rdd = rdd_temp
         else:
-            rdd.union(rdd_temp)
+            rdd = rdd.union(rdd_temp)
     return rdd
 
 def write_results(df1,  bucket, the_dir):
@@ -52,9 +56,10 @@ def compare_rdds(sqlContext, rdd1, rdd2, bucket, s3_valid_dir):
     df2 = rdd2.toDF()
     df1.registerTempTable("first")
     df1.registerTempTable("second")
-    df_error = sqlContext.sql("Select first.path as path1, first.md5sum as md5_sum1, second.path as path2, second.md5sum\
-            as md5_sum2 from first full outer join second on first.key = second.key\
-            where second.path is null or first.md5sum != second.md5sum")
+    df_error = sqlContext.sql("""Select first.path as path1, first.md5sum as md5_sum1, second.path as path2, second.md5sum
+            as md5_sum2 from first inner join second on first.key = second.key
+             WHERE first.md5sum != second.md5sum
+            """)
     write_results(df_error, bucket = bucket, the_dir = s3_valid_dir)
 
 def main():
@@ -62,10 +67,10 @@ def main():
     sqlContext = SQLContext(sc)
     bucket = 'paulhtremblay'
     start_year = 1901
-    end_year = 1903
+    end_year = 2017
     rdd1 = make_rdd(sc, start_year, end_year)
-    rdd2 = make_rdd(sc, start_year, end_year, validation = '_validation')
-    s3_valid_dir = "noaa_validation_results"
+    rdd2 = make_rdd(sc, start_year, end_year, validation = True)
+    s3_valid_dir = "noaa/noaa_validation_results_{0}".format(datetime.datetime.now())
     compare_rdds(sqlContext, rdd1, rdd2, bucket, s3_valid_dir)
 
 if __name__ == '__main__':
