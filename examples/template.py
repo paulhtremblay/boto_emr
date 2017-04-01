@@ -92,7 +92,14 @@ response = client.run_job_flow(
         'Classification': 'spark-defaults',
         'Properties': {
             'spark.ui.showConsoleProgress': 'false'
+            #'spark.eventLog.dir':'hdfs:///var/log/spark/apps'
+            # could set above line to s3:
         }
+
+
+
+
+
     }, {
         'Classification': 'spark-env',
         'Properties': {},

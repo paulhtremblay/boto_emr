@@ -6,6 +6,8 @@ import datetime
 import hashlib
 import os
 import boto3
+import StringIO
+import csv
 
 def s3_delete(key):
         s3 = boto3.resource('s3')
@@ -46,10 +48,57 @@ def make_rdd(sc, start_year, end_year, validation = False):
             rdd = rdd.union(rdd_temp)
     return rdd
 
+def md5sums_match(r):
+    if len(r[1]) != 2:
+        return False
+    return r[1].data[0][1] == r[1].data[1][1]
+
+def md5sums_no_match(r):
+    if len(r[1]) != 2:
+        return True
+    return r[1].data[0][1] != r[1].data[1][1]
+
+def md5sums_as_rows(r):
+    return Row(year = r[0][-7:-2], path = r[0], md5sum = r[1].data[0][1])
+
+def write_csv(records, fieldnames):
+    output = StringIO.StringIO()
+    writer = csv.DictWriter(output, fieldnames )
+    for record in records:
+        writer.writerow(record.asDict())
+    return [output.getvalue()]
+
+def write_csv_no_match(records):
+    return write_csv(records, ['key', 'path_1', 'md5sum_1', 'path_2', 'md5sum_2'])
+
+def write_csv_match(records):
+    return write_csv(records, ['year', 'key', 'path', 'md5sum'])
+
+def md5sums_no_match_as_row(r):
+    for item in r[1]:
+        if 'tmp' in item[0]:
+            md5sum_2 = item[1]
+            path_2 = item[0]
+        else:
+            md5sum_1 = item[1]
+            path_1 = item[0]
+    return Row(key = r[0], path_1 = path_1, md5sum_1 = md5sum_1, path_2 = path_2, md5sum_2 = md5sum_2)
+
+def md5sums_match_as_row(r):
+    for item in r[1]:
+        if 'tmp' in item[0]:
+            continue
+        else:
+            md5sum = item[1]
+            path = item[0]
+    return Row(key = r[0], path = path, md5sum = md5sum, year = r[0][-7:-3])
+
+
 def write_results(df1,  bucket, the_dir):
-    s3_delete(the_dir)
+    #s3_delete(the_dir)
     path = "s3://{0}/{1}".format(bucket, the_dir)
     df1.coalesce(1).write.csv(path)
+    #df1.write.csv(path)
 
 def compare_rdds(sqlContext, rdd1, rdd2, bucket, s3_valid_dir):
     df1 = rdd1.toDF()
@@ -67,11 +116,29 @@ def main():
     sqlContext = SQLContext(sc)
     bucket = 'paulhtremblay'
     start_year = 1901
-    end_year = 2017
+    end_year = 1903
     rdd1 = make_rdd(sc, start_year, end_year)
     rdd2 = make_rdd(sc, start_year, end_year, validation = True)
-    s3_valid_dir = "noaa/noaa_validation_results_{0}".format(datetime.datetime.now())
-    compare_rdds(sqlContext, rdd1, rdd2, bucket, s3_valid_dir)
+    rdd1.cache()
+    rdd2.cache()
+    rdd_join = rdd1.union(rdd2)
+    rdd_join.cache()
+    rdd_by_keys = rdd_join.map(lambda x: (x.key, (x.path, x.md5sum)))\
+            .groupByKey()
+    rdd_by_keys.cache()
+    rdd_no_match = rdd_by_keys\
+            .filter(md5sums_no_match)
+    if rdd_no_match.count() != 0:
+        rdd_no_match\
+            .map(md5sums_no_match_as_row)\
+            .mapPartitions(write_csv_no_match)\
+            .saveAsTextFile("s3://paulhtremblay/noaa/tmp/mdsums_no_match_{0}".format(datetime.datetime.now()))
+
+    rdd_by_keys\
+            .filter(md5sums_match)\
+            .map(md5sums_match_as_row)\
+            .mapPartitions(write_csv_match)\
+            .saveAsTextFile("s3://paulhtremblay/noaa/mdsums_s3_{0}".format(datetime.datetime.now()))
 
 if __name__ == '__main__':
     main()
