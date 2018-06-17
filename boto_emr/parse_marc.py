@@ -1,4 +1,4 @@
-﻿import io
+import io
 import datetime
 
 def _is_new_record(line):
@@ -30,6 +30,25 @@ def _process_line(line, record, list_of_marc_records):
     key, value =  _get_key_value(line)
     if key:
         record[key] = _process_value(key, value)
+
+def parse_record(text):
+    f = io.StringIO(text)
+    line = 'init'
+    record = {'header':{}, 'body':{}}
+    part = 'header'
+    while line:
+        line = f.readline()
+        if line.strip() == '':
+            part = 'start_body'
+            continue
+        if part == 'start_body':
+            record['body']['response'] = line.strip()
+            part = 'body'
+            continue
+        key, value = _get_key_value(line)
+        if key:
+            record[part][key] = _process_value(key, value)
+    return record
 
 def parse(text):
     list_of_marc_records = []
