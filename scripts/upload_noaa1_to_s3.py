@@ -25,11 +25,11 @@ def _generate_random(length = 5):
     return ''.join(random.choice(string.ascii_lowercase + string.ascii_uppercase) for i in range(length))
 
 def _upload_contents_to_s3(ftp, s3_client, json_obj, local_gz, mdsums, s3_out_dir, bucket):
-        ftp.cwd('/pub/data/noaa/{0}/'.format(json_obj["year"]))
-        with open(local_gz, 'wb') as write_obj:
-            ftp.retrbinary('RETR {0}'.format(json_obj["name"]), write_obj.write)
-        mdsums.append((str(json_obj["year"]), json_obj["name"], md5(local_gz )))
-        s3_client.upload_file(local_gz, bucket, s3_out_dir )
+    ftp.cwd('/pub/data/noaa/{0}/'.format(json_obj["year"]))
+    with open(local_gz, 'wb') as write_obj:
+        ftp.retrbinary('RETR {0}'.format(json_obj["name"]), write_obj.write)
+    mdsums.append((str(json_obj["year"]), json_obj["name"], md5(local_gz )))
+    #s3_client.upload_file(local_gz, bucket, s3_out_dir )
 
 def _handle_error(ex, json_obj, errors):
     message = "excpetion: {0}, args: {1}".format(type(ex).__name__, ', '.join(ex.args))

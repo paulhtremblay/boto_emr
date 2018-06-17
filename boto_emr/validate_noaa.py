@@ -36,6 +36,16 @@ def get_md5sum(my_iter):
 
 def make_rdd(sc, start_year, end_year, validation = False):
     for counter, year in enumerate(range(start_year, end_year + 1)):
+        rdd_temp = sc.wholeTextFiles("s3://paulhtremblay/noaa/tmp/data_validation/{0}/".format(year), 300)
+        if counter == 0:
+            rdd = rdd_temp
+        else:
+            rdd = rdd.union(rdd_temp)
+    return rdd
+
+
+def make_rdd(sc, start_year, end_year, validation = False):
+    for counter, year in enumerate(range(start_year, end_year + 1)):
         if validation:
             rdd_temp = sc.wholeTextFiles("s3://paulhtremblay/noaa/tmp/data_validation/{0}/".format(year))\
                 .mapPartitions(get_md5sum)
@@ -73,6 +83,11 @@ def write_csv_no_match(records):
 
 def write_csv_match(records):
     return write_csv(records, ['year', 'key', 'path', 'md5sum'])
+
+def write_csv_temp(records):
+    return write_csv(records, ['path', 'key', 'md5sum'])
+
+
 
 def md5sums_no_match_as_row(r):
     for item in r[1]:
@@ -115,8 +130,17 @@ def main():
     sc  = SparkContext(appName = "validation {0}".format(datetime.datetime.now()))
     sqlContext = SQLContext(sc)
     bucket = 'paulhtremblay'
-    start_year = 1901
-    end_year = 1903
+    start_year = 1991
+    end_year = 1995
+
+
+    rdd = sc.wholeTextFiles("s3://paulhtremblay/noaa_tmp/", 100000)
+    print("count is {0}".format(rdd.count()))
+    print("num partitions are {0}".format(rdd.getNumPartitions()))
+    return
+
+
+
     rdd1 = make_rdd(sc, start_year, end_year)
     rdd2 = make_rdd(sc, start_year, end_year, validation = True)
     rdd1.cache()
@@ -128,17 +152,18 @@ def main():
     rdd_by_keys.cache()
     rdd_no_match = rdd_by_keys\
             .filter(md5sums_no_match)
+
     if rdd_no_match.count() != 0:
         rdd_no_match\
             .map(md5sums_no_match_as_row)\
             .mapPartitions(write_csv_no_match)\
-            .saveAsTextFile("s3://paulhtremblay/noaa/tmp/mdsums_no_match_{0}".format(datetime.datetime.now()))
+            .saveAsTextFile("s3://paulhtremblay/noaa/tmp/mdsums_no_match_{0}_{1}".format(start_year, end_year))
 
     rdd_by_keys\
             .filter(md5sums_match)\
             .map(md5sums_match_as_row)\
             .mapPartitions(write_csv_match)\
-            .saveAsTextFile("s3://paulhtremblay/noaa/mdsums_s3_{0}".format(datetime.datetime.now()))
+            .saveAsTextFile("s3://paulhtremblay/noaa/mdsums_s3_{0}_{1}".format(start_year, end_year))
 
 if __name__ == '__main__':
     main()
